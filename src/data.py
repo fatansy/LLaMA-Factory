@@ -11,7 +11,7 @@ def save_to_file(file_name, data):
 
 def main():
     # 读取JSON文件
-    with open('G:\\llm\\data\\AMO_chatting\\original_test.json', 'r', encoding='utf-8') as file:
+    with open('G:\\llm\\data\\AMO_chatting\\original.json', 'r', encoding='utf-8') as file:
         data = json.load(file)
 
     # 存储对话数据的变量

@@ -22,6 +22,9 @@
   "sexy_conversations": {
     "file_name": "sexy_conversations.json"
   },
+  "2_final":{
+    "file_name": "2_final.json"
+  },
   "oaast_sft": {
     "file_name": "oaast_sft.json",
     "file_sha1": "7baf5d43e67a91f9bbdf4e400dbe033b87e9757e",
