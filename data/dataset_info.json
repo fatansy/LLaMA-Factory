@@ -19,6 +19,9 @@
     "file_name": "self_cognition.json",
     "file_sha1": "6287a730ada924fc5d9eadc6d8f865e01b7a6f67"
   },
+  "sexy_conversations": {
+    "file_name": "sexy_conversations.json"
+  },
   "oaast_sft": {
     "file_name": "oaast_sft.json",
     "file_sha1": "7baf5d43e67a91f9bbdf4e400dbe033b87e9757e",
