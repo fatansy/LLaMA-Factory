@@ -22,8 +22,8 @@
   "sexy_conversations": {
     "file_name": "sexy_conversations.json"
   },
-  "2_final":{
-    "file_name": "2_final.json"
+  "amo_test_data":{
+    "file_name": "amo/final_v3_1.json"
   },
   "oaast_sft": {
     "file_name": "oaast_sft.json",
