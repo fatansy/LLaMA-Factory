@@ -1,39 +1,57 @@
 import json
 import re
 
+data_src_path = 'data/amo/'
+# data_src_path = 'G:\\llm\\data\\AMO_chatting\\'
+
+def split_file(input_list, max_size = 15000):
+    return [input_list[i:i + max_size] for i in range(0, len(input_list), max_size)]
+
+
+def read_from_file(file_name):
+    with open(data_src_path + file_name, 'r', encoding='utf-8') as file:
+        return json.load(file)
+
+
 def save_to_file(file_name, data):
-    result_file_path = 'G:\\llm\\data\\AMO_chatting\\' + file_name
+    result_file_path = data_src_path + file_name
     with open(result_file_path, 'w', encoding='utf-8') as result_file:
         json.dump(data, result_file, ensure_ascii=False, indent=4)
 
     print(file_name + f" saved to {result_file_path}")
 
 
-def main():
+def first_step(data_version):
     # 读取JSON文件
-    with open('G:\\llm\\data\\AMO_chatting\\original.json', 'r', encoding='utf-8') as file:
-        data = json.load(file)
+    data = read_from_file(f'original_{data_version}.json')
 
     # 存储对话数据的变量
     filtered_conversations = []
-    multi_turn_conversations = []
 
     # 遍历JSON数据
     for dialog in data:
         messages = []
         current_message = None  # To track consecutive messages of the same gender
         for message in dialog:
-            # 1. 跳过包含特定词组的message
-            if any(phrase in message['消息内容'] for phrase in ["button : Try it", "depth_gift_msg", "depth gift after msg", "send gift :"]):
+            # 截断超过40句
+            if len(messages) >= 40:
+                break
+
+            # 跳过包含特定词组的message
+            if any(phrase in message['消息内容'] for phrase in ["button : Try it", "depth_gift_msg", "depth gift after msg", "send gift :", "Duration:", "Duur:", "Call not answered", "Call wasn't answered", "You've refused the call", "Refuse your call"]):
                 continue
 
-            # 2. 将图片或者链接替换为短语
-            message['消息内容'] = re.sub(r'http\S+', 'This is my photo.', message['消息内容'])
+            # 将图片或者链接替换为短语
+            message['消息内容'] = re.sub(r'http\S+', '[photo]', message['消息内容'])
 
-            # 3. 合并连续同一性别发送的不重复message
+            # 合并连续同一性别发送的不重复message
             if current_message and current_message['sender_gender'] == message['发送者性别']:
                 if message['消息内容'] not in current_message['content']:
-                    current_message['content'] += f".{message['消息内容']}"
+                    if current_message['content'].endswith('.') or current_message['content'].endswith('?'):
+                        current_message['content'] += message['消息内容']
+                    else:
+                        current_message['content'] += f".{message['消息内容']}"
+                    
             else:
                 if current_message:
                     messages.append(current_message)
@@ -47,9 +65,9 @@ def main():
         if current_message:
             messages.append(current_message)
 
-        # 4. 删除message数量少于8条的dialog
+        # 删除message数量少于8条的dialog
         if len(messages) >= 10:
-            # 5. 如果第一句是女性发的，去掉它
+            # 如果第一句是女性发的，去掉它
             # 如果最后一句是男性发的，去掉它
             if messages[0]['sender_gender'] == 'WOMAN':
                 messages.pop(0)
@@ -57,29 +75,49 @@ def main():
                 messages.pop()
             filtered_conversations.append(messages)
 
-            # 6. 转换为多轮对话数据格式
-            multi_turn_dialog = []
-            history = []
-            for i in range(1, len(messages), 2):
-                instruction = messages[i - 1]['content']
-                output = messages[i]['content']
-                if i>= 3:
-                    history.append([messages[i - 3]['content'], messages[i - 2]['content']])
+    print(f'filtered_conversations: {len(filtered_conversations)}')
+    # 保存中间结果到format.json文件
+    save_to_file(f'formated_{data_version}.json', filtered_conversations)
 
-                multi_turn_dialog.append({
-                    "instruction": instruction,
-                    "input": "",
-                    "output": output,
-                    "history": history.copy()
-                })
 
-            multi_turn_conversations.extend(multi_turn_dialog)
+def second_step(data_version):
 
-    # 保存中间结果到1_format.json文件
-    save_to_file('1_format.json', filtered_conversations)
+    data = read_from_file(f'formated_{data_version}.json')
+    
+    multi_turn_conversations = []
+    # 转换为多轮对话数据格式
+    for messages in data:
+        multi_turn_dialog = []
+        history = []
+        for i in range(1, len(messages), 2):
+            instruction = messages[i - 1]['content']
+            output = messages[i]['content']
+            if i>= 3:
+                history.append([messages[i - 3]['content'], messages[i - 2]['content']])
+
+            multi_turn_dialog.append({
+                "instruction": instruction,
+                "input": "",
+                "output": output,
+                "history": history.copy()
+            })
+
+        multi_turn_conversations.extend(multi_turn_dialog)
+
+    print(f'multi_turn_conversations: {len(multi_turn_conversations)}')
     # 保存最终结果到2_final.json文件
-    save_to_file('2_final.json', multi_turn_conversations)
+    multi_turn_conversations_splited = split_file(multi_turn_conversations)
+    i = 1
+    for _convs in multi_turn_conversations_splited:
+        save_to_file(f'final_{data_version}_{i}.json', _convs)
+        i += 1
 
 
 if __name__ == "__main__":
-    main()
+
+    data_version = 'v3'
+
+    # 第一步，初步清理和格式化数据
+    # first_step(data_version)
+    # 第二步，人工审查数据后，将数据保存为最终训练所需要的格式
+    second_step(data_version)
