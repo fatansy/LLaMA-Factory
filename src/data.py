@@ -105,6 +105,7 @@ def second_step(data_version):
         multi_turn_conversations.extend(multi_turn_dialog)
 
     print(f'multi_turn_conversations: {len(multi_turn_conversations)}')
+    save_to_file(f'final_{data_version}.json', multi_turn_conversations)
     # 保存最终结果到2_final.json文件
     multi_turn_conversations_splited = split_file(multi_turn_conversations)
     i = 1
