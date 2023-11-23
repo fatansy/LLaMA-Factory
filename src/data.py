@@ -7,8 +7,8 @@ def convert_to_timestamp(date_string):
     timestamp = dt.timestamp()
     return timestamp
 
-data_src_path = 'data/amo/'
-# data_src_path = 'G:\\llm\\data\\AMO_chatting\\'
+# data_src_path = 'data/amo/'
+data_src_path = "G:\\llm\\LLaMA-Factory\\data\\amo\\"
 
 def split_file(input_list, max_size = 15000):
     return [input_list[i:i + max_size] for i in range(0, len(input_list), max_size)]
@@ -112,7 +112,6 @@ def second_step(data_version):
 
             if i>= 23:
                 history.pop(0)
-                history.pop(0)
 
 
             multi_turn_dialog.append({
@@ -136,9 +135,9 @@ def second_step(data_version):
 
 if __name__ == "__main__":
 
-    data_version = 'v4'
+    data_version = 'v5'
 
     # 第一步，初步清理和格式化数据
-    first_step(data_version)
+    # first_step(data_version)
     # 第二步，人工审查数据后，将数据保存为最终训练所需要的格式
     second_step(data_version)
