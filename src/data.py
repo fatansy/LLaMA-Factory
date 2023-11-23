@@ -56,6 +56,7 @@ def first_step(data_version):
 
             # 将图片或者链接替换为短语
             message['消息内容'] = re.sub(r'http\S+', '[photo]', message['消息内容'])
+            message['消息内容'] = re.sub(r'ofcourse', 'of course', message['消息内容'])
 
             # 合并连续同一性别发送的不重复message
             if current_message and current_message['sender_gender'] == message['发送者性别']:
