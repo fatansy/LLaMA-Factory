@@ -40,8 +40,8 @@ def first_step(data_version):
         current_message = None  # To track consecutive messages of the same gender
         current_timestamp = 0
         for message in dialog:
-            # 截断超过50句
-            if len(result_messages) >= 50:
+            # 截断超过100句
+            if len(result_messages) >= 100:
                 break
 
             # 超过半天的接续对话，截断
@@ -109,6 +109,11 @@ def second_step(data_version):
             if i>= 3:
                 history.append([messages[i - 3]['content'], messages[i - 2]['content']])
 
+            if i>= 23:
+                history.pop(0)
+                history.pop(0)
+
+
             multi_turn_dialog.append({
                 "instruction": instruction,
                 "input": "",
@@ -133,6 +138,6 @@ if __name__ == "__main__":
     data_version = 'v4'
 
     # 第一步，初步清理和格式化数据
-    # first_step(data_version)
+    first_step(data_version)
     # 第二步，人工审查数据后，将数据保存为最终训练所需要的格式
     second_step(data_version)
