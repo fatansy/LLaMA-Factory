@@ -23,7 +23,7 @@
     "file_name": "sexy_conversations.json"
   },
   "amo_test_data":{
-    "file_name": "amo/final_v4.json"
+    "file_name": "amo/final_v6.json"
   },
   "oaast_sft": {
     "file_name": "oaast_sft.json",
