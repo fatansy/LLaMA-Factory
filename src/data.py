@@ -43,6 +43,9 @@ def first_step(data_version):
             if current_timestamp and convert_to_timestamp(message['发送时间']) - current_timestamp > 43200:
                 break
 
+            if any(phrase.lower() in message['消息内容'].lower() for phrase in ["turned 2"]):
+                break
+
             # 跳过包含特定词组(系统消息)的 message
             # 跳过关于视频call的讨论
             if any(phrase.lower() in message['消息内容'].lower() for phrase in ["button : Try it", "depth_gift_msg", "depth gift after msg", "send gift :", "Duration:", "Duur:", "Call not answered", "Call wasn't answered", "You've refused the call", "Refuse your call", "video call"]):
@@ -50,7 +53,8 @@ def first_step(data_version):
 
             # 将图片或者链接替换为短语
             message['消息内容'] = re.sub(r'http\S+', '[photo]', message['消息内容'])
-            message['消息内容'] = re.sub(r'ofcourse', 'of course', message['消息内容'])
+            message['消息内容'] = re.sub(r'ofcourse', 'of course', message['消息内容'], flags=re.IGNORECASE)
+            message['消息内容'] = re.sub(r'maid outfit', 'selfie', message['消息内容'], flags=re.IGNORECASE)
 
             # 合并连续同一性别发送的不重复message
             if current_message and current_message['sender_gender'] == message['发送者性别']:
@@ -58,7 +62,7 @@ def first_step(data_version):
                 # 加上TODO标识，手工处理多句连续问题
                 if message['消息内容'] not in current_message['content']:
                     if (convert_to_timestamp(message['发送时间']) - current_timestamp < 120) and not time_to_long:
-                        if current_message['content'].endswith('.') or current_message['content'].endswith('?'):
+                        if current_message['content'].endswith('.') or current_message['content'].endswith('?') or current_message['content'].endswith(']'):
                             current_message['content'] += message['消息内容']
                         else:
                             current_message['content'] += f".{message['消息内容']}"
@@ -133,9 +137,9 @@ def second_step(data_version):
 
 if __name__ == "__main__":
 
-    data_version = 'v6'
+    data_version = 'v6_1'
 
     # 第一步，初步清理和格式化数据
-    # first_step(data_version)
+    first_step(data_version)
     # 第二步，人工审查数据后，将数据保存为最终训练所需要的格式
-    second_step(data_version)
+    #second_step(data_version)
