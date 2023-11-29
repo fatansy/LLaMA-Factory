@@ -34,6 +34,7 @@ def first_step(data_version):
         current_message = None  # To track consecutive messages of the same gender
         current_timestamp = 0
         time_to_long = False
+        containing_bday = False
         for message in dialog:
             # 截断超过100句
             if len(result_messages) >= 100:
@@ -43,7 +44,9 @@ def first_step(data_version):
             if current_timestamp and convert_to_timestamp(message['发送时间']) - current_timestamp > 43200:
                 break
 
-            if any(phrase.lower() in message['消息内容'].lower() for phrase in ["turned 2"]):
+            # 删除生日套路
+            if any(phrase.lower() in message['消息内容'].lower() for phrase in ["turned 2", "bday", "birthday"]):
+                containing_bday = True
                 break
 
             # 跳过包含特定词组(系统消息)的 message
@@ -86,7 +89,8 @@ def first_step(data_version):
             result_messages.append(current_message)
 
         # 删除message数量少于20条的dialog
-        if len(result_messages) >= 22:
+        # 删除包含生日套路
+        if len(result_messages) >= 22 and not containing_bday:
             # 如果第一句是女性发的，去掉它
             # 如果最后一句是男性发的，去掉它，如果最后一句是女性发的，去掉一组对话
             if result_messages[0]['sender_gender'] == 'WOMAN':
@@ -140,6 +144,6 @@ if __name__ == "__main__":
     data_version = 'v6_1'
 
     # 第一步，初步清理和格式化数据
-    first_step(data_version)
+    # first_step(data_version)
     # 第二步，人工审查数据后，将数据保存为最终训练所需要的格式
-    #second_step(data_version)
+    second_step(data_version)
