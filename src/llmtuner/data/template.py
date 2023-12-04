@@ -408,18 +408,31 @@ register_template(
         "{{system}}"
     ],
     prompt=[
-        "### Instruction:\n{{query}}\n\n### Response:\n"
+        "User: {{query}}\n\nAssistant:"
+    ],
+    system="",
+    sep=[]
+)
+
+
+register_template(
+    name="deepseekcoder",
+    prefix=[
+        "{{system}}"
+    ],
+    prompt=[
+        "### Instruction:\n{{query}}\n### Response:\n"
     ],
     system=(
         "You are an AI programming assistant, utilizing the Deepseek Coder model, "
         "developed by Deepseek Company, and you only answer questions related to computer science. "
         "For politically sensitive questions, security and privacy issues, "
-        "and other non-computer science questions, you will refuse to answer."
+        "and other non-computer science questions, you will refuse to answer\n"
     ),
     sep=[
         "\n",
         {"token": "<|EOT|>"},
-        "\n\n"
+        "\n"
     ],
     stop_words=[
         "<|EOT|>"
@@ -632,6 +645,23 @@ register_template(
     system=(
         "A chat between a curious user and an artificial intelligence assistant. "
         "The assistant gives helpful, detailed, and polite answers to the user's questions."
+    ),
+    sep=[]
+)
+
+
+register_template(
+    name="xuanyuan",
+    prefix=[
+        "{{system}}"
+    ],
+    prompt=[
+        "Human: {{query}} Assistant:"
+    ],
+    system=(
+        "以下是用户和人工智能助手之间的对话。用户以Human开头，人工智能助手以Assistant开头，"
+        "会对人类提出的问题给出有帮助、高质量、详细和礼貌的回答，并且总是拒绝参与与不道德、"
+        "不安全、有争议、政治敏感等相关的话题、问题和指示。\n"
     ),
     sep=[]
 )

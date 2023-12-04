@@ -11,14 +11,21 @@ from transformers.utils import (
     ADAPTER_SAFE_WEIGHTS_NAME
 )
 
-from llmtuner.extras.constants import DEFAULT_MODULE, DEFAULT_TEMPLATE, SUPPORTED_MODELS, TRAINING_STAGES
+from llmtuner.extras.constants import (
+    DEFAULT_MODULE,
+    DEFAULT_TEMPLATE,
+    SUPPORTED_MODELS,
+    TRAINING_STAGES,
+    DownloadSource
+)
+from llmtuner.extras.misc import use_modelscope
+from llmtuner.hparams.data_args import DATA_CONFIG
 
 
 DEFAULT_CACHE_DIR = "cache"
 DEFAULT_DATA_DIR = "data"
 DEFAULT_SAVE_DIR = "saves"
 USER_CONFIG = "user.config"
-DATA_CONFIG = "dataset_info.json"
 CKPT_NAMES = [
     WEIGHTS_NAME,
     WEIGHTS_INDEX_NAME,
@@ -58,7 +65,15 @@ def save_config(lang: str, model_name: Optional[str] = None, model_path: Optiona
 
 def get_model_path(model_name: str) -> str:
     user_config = load_config()
-    return user_config["path_dict"].get(model_name, None) or SUPPORTED_MODELS.get(model_name, "")
+    path_dict: Dict[DownloadSource, str] = SUPPORTED_MODELS.get(model_name, [])
+    model_path = user_config["path_dict"].get(model_name, None) or path_dict.get(DownloadSource.DEFAULT, "")
+    if (
+        use_modelscope()
+        and path_dict.get(DownloadSource.MODELSCOPE)
+        and model_path == path_dict.get(DownloadSource.DEFAULT)
+    ): # replace path
+        model_path = path_dict.get(DownloadSource.MODELSCOPE)
+    return model_path
 
 
 def get_prefix(model_name: str) -> str:
@@ -89,12 +104,12 @@ def list_checkpoint(model_name: str, finetuning_type: str) -> Dict[str, Any]:
     return gr.update(value=[], choices=checkpoints)
 
 
-def load_dataset_info(dataset_dir: str) -> Dict[str, Any]:
+def load_dataset_info(dataset_dir: str) -> Dict[str, Dict[str, Any]]:
     try:
         with open(os.path.join(dataset_dir, DATA_CONFIG), "r", encoding="utf-8") as f:
             return json.load(f)
-    except:
-        print("Cannot find {} in {}.".format(DATA_CONFIG, dataset_dir))
+    except Exception as err:
+        print("Cannot open {} due to {}.".format(os.path.join(dataset_dir, DATA_CONFIG), str(err)))
         return {}
 
 

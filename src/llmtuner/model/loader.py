@@ -1,7 +1,8 @@
+import os
 import math
 import torch
 from types import MethodType
-from typing import TYPE_CHECKING, Literal, Optional, Tuple
+from typing import TYPE_CHECKING, Optional, Tuple
 
 from transformers import (
     AutoConfig,
@@ -21,8 +22,8 @@ try:
 except ImportError: # https://github.com/huggingface/transformers/releases/tag/v4.33.1
     from transformers.deepspeed import is_deepspeed_zero3_enabled
 
-from llmtuner.extras.logging import reset_logging, get_logger
-from llmtuner.extras.misc import count_parameters, get_current_device, infer_optim_dtype
+from llmtuner.extras.logging import get_logger
+from llmtuner.extras.misc import count_parameters, get_current_device, infer_optim_dtype, try_download_model_from_ms
 from llmtuner.extras.packages import is_flash_attn2_available
 from llmtuner.extras.patches import llama_patch as LlamaPatches
 from llmtuner.hparams import FinetuningArguments
@@ -48,13 +49,15 @@ def load_model_and_tokenizer(
     model_args: "ModelArguments",
     finetuning_args: "FinetuningArguments",
     is_trainable: Optional[bool] = False,
-    stage: Optional[Literal["pt", "sft", "rm", "ppo"]] = "sft"
+    add_valuehead: Optional[bool] = False
 ) -> Tuple[PreTrainedModel, "PreTrainedTokenizer"]:
     r"""
     Loads pretrained model and tokenizer.
 
     Support both training and inference.
     """
+
+    try_download_model_from_ms(model_args)
 
     config_kwargs = {
         "trust_remote_code": True,
@@ -144,22 +147,25 @@ def load_model_and_tokenizer(
         else:
             logger.warning("Current model does not support shift short attention.")
 
+    # Quantization configurations (using gptq or awq)
+    if getattr(config, "quantization_config", None):
+        if model_args.quantization_bit is not None: # remove bnb quantization
+            model_args.quantization_bit = None
+        config_kwargs["device_map"] = {"": get_current_device()}
+        quantization_config = getattr(config, "quantization_config", None)
+        logger.info("Loading {}-bit quantized model.".format(quantization_config.get("bits", -1)))
+
     # Quantization configurations (using bitsandbytes library)
     if model_args.quantization_bit is not None:
-        if getattr(config, "quantization_config", None):
-            raise ValueError("Remove `quantization_bit` if you are using a quantized model.")
-
         if is_deepspeed_zero3_enabled():
             raise ValueError("DeepSpeed ZeRO-3 is incompatible with quantization.")
 
         if model_args.quantization_bit == 8:
             require_version("bitsandbytes>=0.37.0", "To fix: pip install bitsandbytes>=0.37.0")
-            config_kwargs["load_in_8bit"] = True
             config_kwargs["quantization_config"] = BitsAndBytesConfig(load_in_8bit=True)
 
         if model_args.quantization_bit == 4:
             require_version("bitsandbytes>=0.39.0", "To fix: pip install bitsandbytes>=0.39.0")
-            config_kwargs["load_in_4bit"] = True
             config_kwargs["quantization_config"] = BitsAndBytesConfig(
                 load_in_4bit=True,
                 bnb_4bit_compute_dtype=model_args.compute_dtype,
@@ -199,12 +205,12 @@ def load_model_and_tokenizer(
     # Initialize adapters
     model = prepare_model_for_training(model=model, finetuning_args=finetuning_args) if is_trainable else model
     model = init_adapter(model, model_args, finetuning_args, is_trainable)
-    model = model.train() if is_trainable else model.eval()
 
     # Prepare model with valuehead for RLHF
-    if stage in ["rm", "ppo"]:
+    if add_valuehead:
         model: "AutoModelForCausalLMWithValueHead" = AutoModelForCausalLMWithValueHead.from_pretrained(model)
-        setattr(model, "_keys_to_ignore_on_save", [name for name, _ in model.named_parameters() if "pretrained_model" in name])
+        ignore_modules = [name for name, _ in model.named_parameters() if "pretrained_model" in name]
+        setattr(model, "_keys_to_ignore_on_save", ignore_modules)
         setattr(model, "tie_weights", MethodType(lambda _: None, model)) # use empty method
         vhead_path = (
             model_args.checkpoint_dir[-1] if model_args.checkpoint_dir is not None else model_args.model_name_or_path
@@ -218,6 +224,9 @@ def load_model_and_tokenizer(
     if not is_trainable:
         model.requires_grad_(False) # fix all model params
         model = model.to(model_args.compute_dtype) if model_args.quantization_bit is None else model
+        model.eval()
+    else:
+        model.train()
 
     trainable_params, all_param = count_parameters(model)
     logger.info("trainable params: {:d} || all params: {:d} || trainable%: {:.4f}".format(
