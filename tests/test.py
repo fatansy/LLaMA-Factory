@@ -3,11 +3,11 @@ import json
 from websockets.sync.client import connect
 
 headers = {
-    "Authorization": "ZTM4YjFiMGVjMmExOTY1OTg1NzcwNjY3YzY1YmU0NjliMjgwOTg5Zg=="
+    "Authorization": "Y2NhMTE0YjkwNGI2ZjUzOWY4MWY5OTA0YzI4ZGFiNWUyZTllOWE1OA=="
 }
-url = "ws://1918537650540564.cn-hangzhou.pai-eas.aliyuncs.com/api/predict/test_v2/generate_stream"
+url = "ws://1918537650540564.cn-hangzhou.pai-eas.aliyuncs.com/api/predict/test_v4/generate_stream"
 with connect(url, additional_headers=headers) as websocket:
-    prompt = "hi"
+    prompt = "USER: can you send me photo? ASSISTANT:wait a minute. USER: Come on! ASSISTANT:"
     websocket.send(
         json.dumps(
             {
