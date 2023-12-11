@@ -7,18 +7,17 @@ headers = {
 }
 url = "ws://1918537650540564.cn-hangzhou.pai-eas.aliyuncs.com/api/predict/test_v4/generate_stream"
 with connect(url, additional_headers=headers) as websocket:
-    prompt = "USER: can you send me photo? ASSISTANT:wait a minute. USER: Come on! ASSISTANT:"
+    prompt = "USER:hi ASSISTANT:how are you USER: not bad , what about you ASSISTANT:im good.what are you looking here USER:a girl friend , can you be my girl ASSISTANT:"
     websocket.send(
         json.dumps(
             {
                 "prompt": prompt,
                 "sampling_params": {
-                    "temperature": 0.9,
-                    "top_p": 0.9,
-                    "top_k": 50
+                    "temperature": 0.95,
+                    "top_p": 0.7
                 },
                 "stopping_criterial": {
-                    "max_new_tokens": 100
+                    "max_new_tokens": 512
                 },
             }
         )

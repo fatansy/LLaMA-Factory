@@ -141,7 +141,7 @@ def second_step(data_version):
 
 if __name__ == "__main__":
 
-    data_version = 'v6_1'
+    data_version = 'v7'
 
     # 第一步，初步清理和格式化数据
     # first_step(data_version)
