@@ -541,9 +541,7 @@ register_template(
         "[INST] {{query}} [/INST]"
     ],
     system="",
-    sep=[
-        " "
-    ]
+    sep=[]
 )
 
 
@@ -723,6 +721,9 @@ register_template(
     system="",
     sep=[
         "<|im_end|>\n"
+    ],
+    stop_words=[
+        "<|im_end|>"
     ],
     efficient_eos=True
 )

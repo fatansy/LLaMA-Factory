@@ -382,6 +382,22 @@ register_model_group(
         "Mistral-7B-Chat": {
             DownloadSource.DEFAULT: "mistralai/Mistral-7B-Instruct-v0.1",
             DownloadSource.MODELSCOPE: "AI-ModelScope/Mistral-7B-Instruct-v0.1"
+        },
+        "Mistral-7B-v0.2-Chat": {
+            DownloadSource.DEFAULT: "mistralai/Mistral-7B-Instruct-v0.2"
+        }
+    },
+    template="mistral"
+)
+
+
+register_model_group(
+    models={
+        "Mixtral-8x7B": {
+            DownloadSource.DEFAULT: "mistralai/Mixtral-8x7B-v0.1"
+        },
+        "Mixtral-8x7B-Chat": {
+            DownloadSource.DEFAULT: "mistralai/Mixtral-8x7B-Instruct-v0.1"
         }
     },
     template="mistral"
@@ -578,9 +594,17 @@ register_model_group(
             DownloadSource.DEFAULT: "01-ai/Yi-34B",
             DownloadSource.MODELSCOPE: "01ai/Yi-34B"
         },
+        "Yi-6B-Chat": {
+            DownloadSource.DEFAULT: "01-ai/Yi-6B-Chat",
+            DownloadSource.MODELSCOPE: "01ai/Yi-6B-Chat"
+        },
         "Yi-34B-Chat": {
             DownloadSource.DEFAULT: "01-ai/Yi-34B-Chat",
             DownloadSource.MODELSCOPE: "01ai/Yi-34B-Chat"
+        },
+        "Yi-6B-int8-Chat": {
+            DownloadSource.DEFAULT: "01-ai/Yi-6B-Chat-8bits",
+            DownloadSource.MODELSCOPE: "01ai/Yi-6B-Chat-8bits"
         },
         "Yi-34B-int8-Chat": {
             DownloadSource.DEFAULT: "01-ai/Yi-34B-Chat-8bits",
